@@ -1,0 +1,23 @@
+# Build directories
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/*.cmake
+/*.o
+/*.obj
+/*.exe
+/*.out
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# CLion
+.idea/
+
+# Misc
+ *.log
