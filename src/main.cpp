@@ -20,16 +20,28 @@ static float randDir() {
   return dist(rng);
 }
 
+static Color randColor() {
+  std::uniform_int_distribution<int> dist(63, 255);
+  return {
+    (unsigned char)dist(rng),
+    (unsigned char)dist(rng),
+    (unsigned char)dist(rng),
+    255
+  };
+}
+
 class Point {
 public:
   float x;
   float y;
   float r = 5;
+  Color color = {140, 220, 140, 255};
   Vector2 d = { randDir(), randDir() };
 
   Point(float posX, float posY) : x(posX), y(posY) {}
+  Point(float posX, float posY, Color c) : x(posX), y(posY), color(c) {}
 
-  void draw() const { DrawCircle(x, y, r, Color{ 255, 201, 40, 255 }); }
+  void draw() const { DrawCircle(x, y, r, color); }
   void move() {
     x += d.x;
     y += d.y;
@@ -70,22 +82,34 @@ static float distance(Point& a, Vector2 b) {
   return distance({a.x, a.y}, b);
 }
 
+Color ColorLerp(Color color1, Color color2, float t) {
+    Color result;
+    result.r = color1.r + (color2.r - color1.r) * t;
+    result.g = color1.g + (color2.g - color1.g) * t;
+    result.b = color1.b + (color2.b - color1.b) * t;
+    result.a = color1.a + (color2.a - color1.a) * t;
+    return result;
+}
 
 static void drawLine(Point& a, Point& b) {
   constexpr float MAX_DIST = 150.0f;
   constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
 
-  float dist = distance(a, b, MAX_DIST);
-
-  if (dist <= MAX_DIST) {
+  float dist = distance(a, b);
+  if (dist <= MAX_DIST_SQ) {
     float distance = std::sqrt(dist);
     float thickness = 4.0f - (distance / MAX_DIST) * 3.0f;
     thickness = std::max(thickness, 0.5f);
 
     float alpha = 1.0f - (distance / MAX_DIST);
-    Color c = Fade(ORANGE, alpha);
-
-    DrawLineEx({ a.x, a.y }, { b.x, b.y }, thickness, c);
+    int segments = (int)distance;
+    for (int i = 0; i < segments; i++) {
+      float t = (float)i / (float)segments;
+      Color currentColor = Fade(ColorLerp(a.color, b.color, t), alpha);
+      Vector2 segmentStart = { a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t };
+      Vector2 segmentEnd = { a.x + (b.x - a.x) * ((float)i + 1) / (float)segments, a.y + (b.y - a.y) * ((float)i + 1) / (float)segments };
+      DrawLineEx(segmentStart, segmentEnd, thickness, currentColor);
+    }
   }
 }
 static void drawLine(Point& a, Vector2 b) {
