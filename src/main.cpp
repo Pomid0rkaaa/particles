@@ -106,34 +106,25 @@ static void deletePoint(Vector2 coord, std::vector<Point>& points) {
     }
 }
 
-Color ColorLerp(Color color1, Color color2, float t) {
-    Color result;
-    result.r = color1.r + (color2.r - color1.r) * t;
-    result.g = color1.g + (color2.g - color1.g) * t;
-    result.b = color1.b + (color2.b - color1.b) * t;
-    result.a = color1.a + (color2.a - color1.a) * t;
-    return result;
-}
-
 static void drawLine(Point& a, Point& b) {
   constexpr float MAX_DIST = 150.0f;
   constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
 
   float dist = distance(a, b);
-  if (dist <= MAX_DIST_SQ) {
-    float distance = std::sqrt(dist);
-    float thickness = 4.0f - (distance / MAX_DIST) * 3.0f;
-    thickness = std::max(thickness, 0.5f);
+  if (dist > MAX_DIST_SQ) return;
 
-    float alpha = 1.0f - (distance / MAX_DIST);
-    int segments = (int)distance;
-    for (int i = 0; i < segments; i++) {
-      float t = (float)i / (float)segments;
-      Color currentColor = Fade(ColorLerp(a.color, b.color, t), alpha);
-      Vector2 segmentStart = { a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t };
-      Vector2 segmentEnd = { a.x + (b.x - a.x) * ((float)i + 1) / (float)segments, a.y + (b.y - a.y) * ((float)i + 1) / (float)segments };
-      DrawLineEx(segmentStart, segmentEnd, thickness, currentColor);
-    }
+  float distance = std::sqrt(dist);
+  float thickness = 4.0f - (distance / MAX_DIST) * 3.0f;
+  thickness = std::max(thickness, 0.5f);
+
+  float alpha = 1.0f - (distance / MAX_DIST);
+  int segments = std::max(1, (int)(distance * 0.5f));
+  for (int i = 0; i < segments; i++) {
+    float t = (float)i / (float)segments;
+    Color currentColor = Fade(ColorLerp(a.color, b.color, t), alpha);
+    Vector2 segmentStart = { a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t };
+    Vector2 segmentEnd = { a.x + (b.x - a.x) * ((float)i + 1) / (float)segments, a.y + (b.y - a.y) * ((float)i + 1) / (float)segments };
+    DrawLineEx(segmentStart, segmentEnd, thickness, currentColor);
   }
 }
 static void drawLine(Point& a, Vector2 b) {
@@ -156,7 +147,7 @@ static void push(Point& a, Vector2 b, int mode) {
     switch (mode) {
       case Mode::PUSH: a.d = { std::cosf(angle) * 3.0f, std::sinf(angle) * 3.0f }; break;
       case Mode::ATTRACT: a.d = { std::cosf(angle) * 3.0f * -1, std::sinf(angle) * 3.0f * -1 }; break;
-      case Mode::ORBIT: a.d = { px / mag ,py / mag };
+      case Mode::ORBIT: if (mag > 0.01f) a.d = { px / mag ,py / mag };
     }
   }
 }
