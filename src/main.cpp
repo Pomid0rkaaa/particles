@@ -55,19 +55,19 @@ static void genPoints(std::vector<Point>& vec) {
   int size = 50;
   vec.reserve(vec.size() + size);
   for (int i = 0; i < size; i++)
-    vec.emplace_back(randX(), randY());
+    vec.emplace_back(randX(), randY(), randColor());
 }
 
-static float distance(Vector2 a, Vector2 b, float max) {
+static float distance(Vector2 a, Vector2 b) {
   float dx = b.x - a.x;
   float dy = b.y - a.y;
   return dx * dx + dy * dy;
 }
-static float distance(Point& a, Point&b, float max) {
-  return distance({a.x, a.y}, {b.x, b.y}, max);
+static float distance(Point& a, Point&b) {
+  return distance({a.x, a.y}, {b.x, b.y});
 }
-static float distance(Point& a, Vector2 b, float max) {
-  return distance({a.x, a.y}, b, max);
+static float distance(Point& a, Vector2 b) {
+  return distance({a.x, a.y}, b);
 }
 
 
@@ -115,6 +115,7 @@ static void push(Point& a, Vector2 b, int mode) {
 
 int main(void)
 {
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   InitWindow(800, 600, "particles");
   SetTargetFPS(60);
 
@@ -133,8 +134,7 @@ int main(void)
     if (IsKeyPressed(KEY_G)) mode = ++mode % 3;
     Vector2 mouse = GetMousePosition();
     BeginDrawing();
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.5f));
-
+    ClearBackground(BLACK);
     for (size_t i = 0; i < points.size(); i++) {
       Point& a = points[i];
       if (isMove) a.move();
