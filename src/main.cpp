@@ -147,7 +147,7 @@ static void push(Point& a, Vector2 b, int mode) {
     switch (mode) {
       case Mode::PUSH: a.d = { std::cosf(angle) * 3.0f, std::sinf(angle) * 3.0f }; break;
       case Mode::ATTRACT: a.d = { std::cosf(angle) * 3.0f * -1, std::sinf(angle) * 3.0f * -1 }; break;
-      case Mode::ORBIT: if (mag > 0.01f) a.d = { px / mag ,py / mag };
+      case Mode::ORBIT: if (mag > 0.01f) a.d = { (px / mag) * 2.0f, (py / mag) * 2.0f };
     }
   }
 }
