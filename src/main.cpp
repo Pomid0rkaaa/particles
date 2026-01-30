@@ -153,6 +153,12 @@ static void push(Point& a, Vector2 b, int mode) {
   }
 }
 
+struct SplashText {
+  std::string text;
+  float timer = 0.0f;
+  float duration = 1.5f;
+} static splash;
+
 int main(void)
 {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -168,15 +174,36 @@ int main(void)
 
   while (!WindowShouldClose())
   {
+    float dt = GetFrameTime();
+    if (splash.timer < splash.duration) splash.timer += 2*dt;
+
     Vector2 mouse = GetMousePosition();
 
     switch (GetKeyPressed()) {
-      case KEY_SPACE: isMove = !isMove; break;
-      case KEY_C: points.clear(); break;
-      case KEY_ONE: mode = Mode::NONE; break;
-      case KEY_TWO: mode = Mode::PUSH; break;
-      case KEY_THREE: mode = Mode::ATTRACT; break;
-      case KEY_FOUR: mode = Mode::ORBIT; break;
+      case KEY_SPACE:
+        isMove = !isMove;
+        splash = {isMove ? "RESUME" : "PAUSE", 0.0f};
+        break;
+      case KEY_C:
+        points.clear();
+        splash = {"CLEAR", 0.0f};
+        break;
+      case KEY_ONE:
+        mode = Mode::NONE;
+        splash = {"MODE: NONE", 0.0f};
+        break;
+      case KEY_TWO:
+        mode = Mode::PUSH;
+        splash = {"MODE: PUSH", 0.0f};
+        break;
+      case KEY_THREE:
+        mode = Mode::ATTRACT;
+        splash = {"MODE: ATTRACT", 0.0f};
+        break;
+      case KEY_FOUR:
+        mode = Mode::ORBIT;
+        splash = {"MODE: ORBIT", 0.0f};
+        break;
     }
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) points.push_back(Point(mouse.x, mouse.y, randColor()));
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) deletePoint(mouse, points);
@@ -194,6 +221,25 @@ int main(void)
       drawLine(a, mouse);
     }
     if (mode != Mode::NONE) DrawCircleLinesV(mouse, 30, Fade(WHITE, 0.2f));
+
+    if (splash.timer < splash.duration) {
+      float alpha = 1.0f - (splash.timer / splash.duration);
+      Color c = Fade(WHITE, alpha);
+
+      int fontSize = 30 - 10 * (splash.timer / splash.duration);
+      int textWidth = MeasureText(splash.text.c_str(), fontSize);
+      int y = GetScreenHeight() - 60 + (int)(20 * (splash.timer / splash.duration));
+
+
+      DrawText(
+        splash.text.c_str(),
+        GetScreenWidth()/2 - textWidth/2,
+        y,
+        fontSize,
+        c
+      );
+    }
+
 
     EndDrawing();
   }
