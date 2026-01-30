@@ -33,7 +33,7 @@ static Color randColor() {
 constexpr float MAX_DIST = 150.0f;
 constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
 constexpr float MAX_DIST_MODE = 30.0f;
-constexpr float MAX_DIST_MODE_SQ = MAX_DIST_MODE;
+constexpr float MAX_DIST_MODE_SQ = MAX_DIST_MODE * MAX_DIST_MODE;
 
 class Point {
 public:
@@ -194,6 +194,7 @@ int main(void)
   genPoints(points);
 
   bool isMove = true;
+  bool isCircle = false;
   int mode = Mode::NONE;
 
   while (!WindowShouldClose())
@@ -229,6 +230,9 @@ int main(void)
         mode = Mode::ORBIT;
         splash = {"MODE: ORBIT", 0.0f};
         break;
+      case KEY_G:
+        isCircle = !isCircle;
+        break;
     }
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       if (IsKeyDown(KEY_LEFT_SHIFT)) {
@@ -261,7 +265,7 @@ int main(void)
     for (int idx : closestPoints(mouse, points, 5)) {
       drawLine(points[idx], mouse);
     }
-    if (mode != Mode::NONE) DrawCircleLinesV(mouse, 30, Fade(WHITE, 0.2f));
+    if (isCircle) DrawCircleLinesV(mouse, 30, Fade(WHITE, 0.2f));
 
     if (splash.timer < splash.duration) {
       float alpha = 1.0f - (splash.timer / splash.duration);
