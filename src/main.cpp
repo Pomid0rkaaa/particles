@@ -109,7 +109,8 @@ static void deletePoint(Vector2 coord, std::vector<Point>& points) {
 static void drawLine(Point& a, Point& b) {
   constexpr float MAX_DIST = 150.0f;
   constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
-
+  float dx = b.x - a.x;
+  float dy = b.y - a.y;
   float dist = distance(a, b);
   if (dist > MAX_DIST_SQ) return;
 
@@ -122,8 +123,8 @@ static void drawLine(Point& a, Point& b) {
   for (int i = 0; i < segments; i++) {
     float t = (float)i / (float)segments;
     Color currentColor = Fade(ColorLerp(a.color, b.color, t), alpha);
-    Vector2 segmentStart = { a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t };
-    Vector2 segmentEnd = { a.x + (b.x - a.x) * ((float)i + 1) / (float)segments, a.y + (b.y - a.y) * ((float)i + 1) / (float)segments };
+    Vector2 segmentStart = { a.x + dx * t, a.y + dy * t };
+    Vector2 segmentEnd = { a.x + dx * ((float)i + 1) / (float)segments, a.y + dy * ((float)i + 1) / (float)segments };
     DrawLineEx(segmentStart, segmentEnd, thickness, currentColor);
   }
 }
