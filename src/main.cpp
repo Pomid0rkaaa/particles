@@ -82,6 +82,30 @@ static float distance(Point& a, Vector2 b) {
   return distance({a.x, a.y}, b);
 }
 
+static void deletePoint(Vector2 coord, std::vector<Point>& points) {
+    constexpr float MAX_DIST_SQ = 50.0f * 50.0f;
+
+    if (points.empty()) return;
+
+    int closestIndex = -1;
+    float closestDistSq = MAX_DIST_SQ;
+
+    for (int i = 0; i < (int)points.size(); ++i) {
+        float dx = points[i].x - coord.x;
+        float dy = points[i].y - coord.y;
+        float distSq = dx*dx + dy*dy;
+
+        if (distSq < closestDistSq) {
+            closestDistSq = distSq;
+            closestIndex = i;
+        }
+    }
+
+    if (closestIndex != -1) {
+        points.erase(points.begin() + closestIndex);
+    }
+}
+
 Color ColorLerp(Color color1, Color color2, float t) {
     Color result;
     result.r = color1.r + (color2.r - color1.r) * t;
@@ -117,7 +141,7 @@ static void drawLine(Point& a, Vector2 b) {
   drawLine(a, p);
 }
 
-enum Mode { PUSH, ATTRACT, ORBIT };
+enum Mode { PUSH, ATTRACT, ORBIT, NONE };
 static void push(Point& a, Vector2 b, int mode) {
   static constexpr float MAX_DIST = 30.0f;
   static constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
@@ -149,14 +173,23 @@ int main(void)
   bool isMove = true;
   bool isHelp = true;
   static constexpr float MAX_DIST_SQ = 150.0f * 150.0f;
-  int mode = Mode::PUSH;
+  int mode = Mode::NONE;
 
   while (!WindowShouldClose())
   {
-    if (IsKeyPressed(KEY_SPACE)) isMove = !isMove;
-    if (IsKeyPressed(KEY_H)) isHelp = !isHelp;
-    if (IsKeyPressed(KEY_G)) mode = ++mode % 3;
     Vector2 mouse = GetMousePosition();
+
+    switch (GetKeyPressed()) {
+      case KEY_SPACE: isMove = !isMove; break;
+      case KEY_C: points.clear(); break;
+      case KEY_ONE: mode = Mode::NONE; break;
+      case KEY_TWO: mode = Mode::PUSH; break;
+      case KEY_THREE: mode = Mode::ATTRACT; break;
+      case KEY_FOUR: mode = Mode::ORBIT; break;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) points.push_back(Point(mouse.x, mouse.y, randColor()));
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) deletePoint(mouse, points);
+
     BeginDrawing();
     ClearBackground(BLACK);
     for (size_t i = 0; i < points.size(); i++) {
