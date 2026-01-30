@@ -171,7 +171,6 @@ int main(void)
   genPoints(points);
 
   bool isMove = true;
-  bool isHelp = true;
   static constexpr float MAX_DIST_SQ = 150.0f * 150.0f;
   int mode = Mode::NONE;
 
