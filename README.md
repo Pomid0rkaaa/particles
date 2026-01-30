@@ -7,6 +7,7 @@
 | `Space`                             | Pause/Resume                   |
 | `C`                                 | Clear                          |
 | `G`                                 | Toggle interaction area circle |
+| `D`                                 | Toggle debug info              |
 | `1`                                 | Mode: None                     |
 | `2`                                 | Mode: Push                     |
 | `3`                                 | Mode: Attract                  |

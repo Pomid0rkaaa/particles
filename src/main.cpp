@@ -195,6 +195,7 @@ int main(void)
 
   bool isMove = true;
   bool isCircle = false;
+  bool isDebug = false;
   int mode = Mode::NONE;
 
   while (!WindowShouldClose())
@@ -232,6 +233,9 @@ int main(void)
         break;
       case KEY_G:
         isCircle = !isCircle;
+        break;
+      case KEY_D:
+        isDebug = !isDebug;
         break;
     }
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -283,7 +287,10 @@ int main(void)
         c
       );
     }
-    DrawText((std::string("Points: ") + std::to_string(Point::count)).c_str(), 4, 4, 20, Fade(RAYWHITE, 0.5f));
+    if (isDebug) {
+      DrawFPS(4, 4);
+      DrawText((std::string("Points: ") + std::to_string(Point::count)).c_str(), 4, 28, 20, RAYWHITE);
+    }
 
     EndDrawing();
   }
