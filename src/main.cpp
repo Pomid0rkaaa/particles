@@ -58,30 +58,39 @@ static void genPoints(std::vector<Point>& vec) {
     vec.emplace_back(randX(), randY());
 }
 
-static void drawLine(float ax, float ay, float bx, float by) {
+static float distance(Vector2 a, Vector2 b, float max) {
+  float dx = b.x - a.x;
+  float dy = b.y - a.y;
+  return dx * dx + dy * dy;
+}
+static float distance(Point& a, Point&b, float max) {
+  return distance({a.x, a.y}, {b.x, b.y}, max);
+}
+static float distance(Point& a, Vector2 b, float max) {
+  return distance({a.x, a.y}, b, max);
+}
+
+
+static void drawLine(Point& a, Point& b) {
   constexpr float MAX_DIST = 150.0f;
   constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
 
-  float dx = bx - ax;
-  float dy = by - ay;
-  float distSq = dx * dx + dy * dy;
+  float dist = distance(a, b, MAX_DIST);
 
-  if (distSq <= MAX_DIST_SQ) {
-    float distance = std::sqrt(distSq);
+  if (dist <= MAX_DIST) {
+    float distance = std::sqrt(dist);
     float thickness = 4.0f - (distance / MAX_DIST) * 3.0f;
     thickness = std::max(thickness, 0.5f);
 
     float alpha = 1.0f - (distance / MAX_DIST);
     Color c = Fade(ORANGE, alpha);
 
-    DrawLineEx({ ax, ay }, { bx, by }, thickness, c);
+    DrawLineEx({ a.x, a.y }, { b.x, b.y }, thickness, c);
   }
 }
-static void drawLine(Point& a, Point& b) {
-  drawLine(a.x, a.y, b.x, b.y);
-}
 static void drawLine(Point& a, Vector2 b) {
-  drawLine(a.x, a.y, b.x, b.y);
+  Point p(b.x, b.y);
+  drawLine(a, p);
 }
 
 enum Mode { PUSH, ATTRACT, ORBIT };
