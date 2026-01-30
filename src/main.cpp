@@ -192,6 +192,7 @@ int main(void)
       push(a, mouse, mode);
       drawLine(a, mouse);
     }
+    if (mode != Mode::NONE) DrawCircleLinesV(mouse, 30, Fade(WHITE, 0.2f));
 
     EndDrawing();
   }
