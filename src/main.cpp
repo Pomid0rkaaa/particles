@@ -30,11 +30,17 @@ static Color randColor() {
   };
 }
 
+constexpr float MAX_DIST = 150.0f;
+constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
+constexpr float MAX_DIST_MODE = 30.0f;
+constexpr float MAX_DIST_MODE_SQ = MAX_DIST_MODE;
+
 class Point {
 public:
   float x;
   float y;
   float r = 5;
+  inline static unsigned int count = 0;
   Color color = {140, 220, 140, 255};
   Vector2 d = { randDir(), randDir() };
 
@@ -68,6 +74,7 @@ static void genPoints(std::vector<Point>& vec) {
   vec.reserve(vec.size() + size);
   for (int i = 0; i < size; i++)
     vec.emplace_back(randX(), randY(), randColor());
+  Point::count += size;
 }
 
 static float distance(Vector2 a, Vector2 b) {
@@ -83,12 +90,10 @@ static float distance(Point& a, Vector2 b) {
 }
 
 static void deletePoint(Vector2 coord, std::vector<Point>& points) {
-    constexpr float MAX_DIST_SQ = 50.0f * 50.0f;
-
     if (points.empty()) return;
 
     int closestIndex = -1;
-    float closestDistSq = MAX_DIST_SQ;
+    float closestDistSq = MAX_DIST_MODE_SQ;
 
     for (int i = 0; i < (int)points.size(); ++i) {
         float dx = points[i].x - coord.x;
@@ -102,13 +107,35 @@ static void deletePoint(Vector2 coord, std::vector<Point>& points) {
     }
 
     if (closestIndex != -1) {
-        points.erase(points.begin() + closestIndex);
+      points.erase(points.begin() + closestIndex);
+      --Point::count;
     }
 }
 
+static std::vector<int> closestPoints(Vector2 a, const std::vector<Point>& points, int maxCount = 5) {
+  std::vector<std::pair<float,int>> distances;
+  distances.reserve(points.size());
+
+  for (int i = 0; i < (int)points.size(); i++) {
+    auto b = points[i];
+    float distSq = distance(b, a);
+    if (distSq <= 0.1f) continue;
+    distances.push_back({distSq, i});
+  }
+
+  std::sort(distances.begin(), distances.end(), [](auto& lhs, auto& rhs){ return lhs.first < rhs.first; });
+
+  std::vector<int> result;
+  for (int i = 0; i < (int)distances.size() && i < maxCount; i++) {
+    result.push_back(distances[i].second);
+  }
+  return result;
+}
+static std::vector<int> closestPoints(Point& a, const std::vector<Point>& points, int maxCount = 5) {
+  return closestPoints({a.x, a.y}, points, maxCount);
+}
+
 static void drawLine(Point& a, Point& b) {
-  constexpr float MAX_DIST = 150.0f;
-  constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
   float dx = b.x - a.x;
   float dy = b.y - a.y;
   float dist = distance(a, b);
@@ -135,8 +162,6 @@ static void drawLine(Point& a, Vector2 b) {
 
 enum Mode { PUSH, ATTRACT, ORBIT, NONE };
 static void push(Point& a, Vector2 b, int mode) {
-  static constexpr float MAX_DIST = 30.0f;
-  static constexpr float MAX_DIST_SQ = MAX_DIST * MAX_DIST;
   float dx = a.x - b.x;
   float dy = a.y - b.y;
   float px = -dy;
@@ -144,7 +169,7 @@ static void push(Point& a, Vector2 b, int mode) {
   float mag = std::sqrt(px * px + py * py);
   float distSq = dx * dx + dy * dy;
   float angle = std::atan2(dy, dx);
-  if (distSq <= MAX_DIST_SQ) {
+  if (distSq <= MAX_DIST_MODE_SQ) {
     switch (mode) {
       case Mode::PUSH: a.d = { std::cosf(angle) * 3.0f, std::sinf(angle) * 3.0f }; break;
       case Mode::ATTRACT: a.d = { std::cosf(angle) * 3.0f * -1, std::sinf(angle) * 3.0f * -1 }; break;
@@ -169,7 +194,6 @@ int main(void)
   genPoints(points);
 
   bool isMove = true;
-  static constexpr float MAX_DIST_SQ = 150.0f * 150.0f;
   int mode = Mode::NONE;
 
   while (!WindowShouldClose())
@@ -187,6 +211,7 @@ int main(void)
       case KEY_C:
         points.clear();
         splash = {"CLEAR", 0.0f};
+        Point::count = 0;
         break;
       case KEY_ONE:
         mode = Mode::NONE;
@@ -205,8 +230,22 @@ int main(void)
         splash = {"MODE: ORBIT", 0.0f};
         break;
     }
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) points.push_back(Point(mouse.x, mouse.y, randColor()));
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) deletePoint(mouse, points);
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      if (IsKeyDown(KEY_LEFT_SHIFT)) {
+        for (size_t i = 0; i < 5; i++)
+          points.push_back(Point(mouse.x, mouse.y, randColor()));
+        Point::count += 5;
+      } else {
+        points.push_back(Point(mouse.x, mouse.y, randColor()));
+        ++Point::count;
+      }
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+      if (IsKeyDown(KEY_LEFT_SHIFT))
+        for (size_t i = 0; i < 5; i++)
+          deletePoint(mouse, points);
+      else deletePoint(mouse, points);
+    }
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -214,11 +253,13 @@ int main(void)
       Point& a = points[i];
       if (isMove) a.move();
       a.draw();
-      for (size_t j = i + 1; j < points.size(); j++) {
-        drawLine(a, points[j]);
+      for (int idx : closestPoints(a, points, 5)) {
+        drawLine(a, points[idx]);
       }
       push(a, mouse, mode);
-      drawLine(a, mouse);
+    }
+    for (int idx : closestPoints(mouse, points, 5)) {
+      drawLine(points[idx], mouse);
     }
     if (mode != Mode::NONE) DrawCircleLinesV(mouse, 30, Fade(WHITE, 0.2f));
 
@@ -230,7 +271,6 @@ int main(void)
       int textWidth = MeasureText(splash.text.c_str(), fontSize);
       int y = GetScreenHeight() - 60 + (int)(20 * (splash.timer / splash.duration));
 
-
       DrawText(
         splash.text.c_str(),
         GetScreenWidth()/2 - textWidth/2,
@@ -239,7 +279,7 @@ int main(void)
         c
       );
     }
-
+    DrawText((std::string("Points: ") + std::to_string(Point::count)).c_str(), 4, 4, 20, Fade(RAYWHITE, 0.5f));
 
     EndDrawing();
   }
