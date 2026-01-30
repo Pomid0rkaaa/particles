@@ -1,6 +1,5 @@
 #include <raylib.h>
 #include <vector>
-#include <array>
 #include <algorithm>
 #include <cmath>
 #include <random>
@@ -105,23 +104,6 @@ static void push(Point& a, Vector2 b, int mode) {
   }
 }
 
-std::array<std::string, 8> helpText{
-  "Space = Pause",
-  "Mouse = Push",
-  "G = Switch mode:",
-  "  Push",
-  "  Attract",
-  "  Orbit",
-  "H = Show this",
-  "ESC = Exit"
-};
-static void drawHelp() {
-  for (size_t i = 0; i < helpText.size(); i++) {
-    int y = 24 * i + 4 * (i + 1);
-    DrawText(helpText[i].c_str(), 4, y, 24, Color{ 130, 130, 130, 190 });
-  }
-}
-
 int main(void)
 {
   InitWindow(800, 600, "particles");
@@ -155,7 +137,6 @@ int main(void)
       drawLine(a, mouse);
     }
 
-    if (isHelp) drawHelp();
     EndDrawing();
   }
 
