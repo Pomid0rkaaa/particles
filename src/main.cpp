@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include <string>
 
 std::mt19937 rng(std::random_device{}());
 static int randX() {
@@ -233,9 +234,11 @@ int main(void)
         break;
       case KEY_G:
         isCircle = !isCircle;
+        splash = {std::string("INTERACTION AREA: ").append(isCircle ? "ON" : "OFF").c_str(), 0.0f};
         break;
       case KEY_D:
         isDebug = !isDebug;
+        splash = {std::string("DEBUG: ").append(isDebug ? "ON" : "OFF").c_str(), 0.0f};
         break;
     }
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
